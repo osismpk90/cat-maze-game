@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Cat Maze School</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  text-align:center;
+  color:white;
+  background: url("bg-sekolah.jpg") no-repeat center center/cover;
+}
+
+.overlay{
+  background: rgba(0,0,0,0.6);
+  min-height:100vh;
+  padding:10px;
+}
+
+h2{
+  font-family:'Orbitron';
+}
+
+.logos{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+}
+
+.logos img{
+  width:60px;
+  height:60px;
+  object-fit:contain;
+}
+
+canvas{
+  background:#ffffff;
+  border-radius:15px;
+  margin-top:15px;
+  width:90%;
+  max-width:350px;
+}
+
+.controls button{
+  width:60px;
+  height:60px;
+  margin:5px;
+  border-radius:12px;
+  border:none;
+  background:#0f172a;
+  color:#38bdf8;
+  font-size:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+<div class="logos">
+  <img src="logo-sekolah.png">
+  <img src="logo-mpk.png">
+  <img src="logo-osis.png">
+</div>
+
+<h2>CAT MAZE SCHOOL</h2>
+<p id="levelText">Level 1</p>
+
+<canvas id="maze" width="350" height="350"></canvas>
+
+<div class="controls">
+<br>
+<button onclick="move(0,-1)">▲</button><br>
+<button onclick="move(-1,0)">◀</button>
+<button onclick="move(0,1)">▼</button>
+<button onclick="move(1,0)">▶</button>
+</div>
+
+</div>
+
+<script>
+const canvas=document.getElementById("maze");
+const ctx=canvas.getContext("2d");
+
+const cat=new Image();
+cat.src="kucing.png";
+
+const tile=25;
+
+let player={x:1,y:1};
+let level=0;
+
+/* 🔥 3 LEVEL GRID (KAYAK PINTEREST) */
+const levels=[
+
+// LEVEL 1
+[
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,1,1,1,0,1,1,1,1,1,0,1,1,0],
+[0,1,0,1,0,1,0,0,0,1,0,1,0,0],
+[0,1,0,1,1,1,0,1,0,1,1,1,0,0],
+[0,1,0,0,0,1,0,1,0,0,0,1,0,0],
+[0,1,1,1,0,1,1,1,1,1,0,1,1,0],
+[0,0,0,1,0,0,0,0,0,1,0,0,1,0],
+[0,1,1,1,1,1,1,1,0,1,1,1,1,0],
+[0,1,0,0,0,0,0,1,0,0,0,0,1,0],
+[0,1,1,1,1,1,0,1,1,1,1,1,1,0],
+[0,0,0,0,0,1,0,0,0,0,0,0,1,0],
+[0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+],
+
+// LEVEL 2 (LEBIH SUSAH)
+[
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,1,1,0,1,1,1,0,1,1,1,0,1,0],
+[0,1,0,0,1,0,1,0,1,0,1,0,1,0],
+[0,1,1,1,1,0,1,1,1,0,1,1,1,0],
+[0,0,0,0,1,0,0,0,1,0,0,0,1,0],
+[0,1,1,0,1,1,1,0,1,1,1,0,1,0],
+[0,1,0,0,0,0,1,0,0,0,1,0,1,0],
+[0,1,1,1,1,0,1,1,1,0,1,1,1,0],
+[0,0,0,0,1,0,0,0,1,0,0,0,0,0],
+[0,1,1,1,1,1,1,0,1,1,1,1,1,0],
+[0,1,0,0,0,0,1,0,0,0,0,0,1,0],
+[0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+],
+
+// LEVEL 3 (SANGAT SUSAH)
+[
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,1,1,1,0,1,1,1,0,1,1,1,1,0],
+[0,1,0,1,0,1,0,1,0,1,0,0,1,0],
+[0,1,0,1,1,1,0,1,1,1,1,0,1,0],
+[0,1,0,0,0,1,0,0,0,0,1,0,1,0],
+[0,1,1,1,0,1,1,1,1,0,1,1,1,0],
+[0,0,0,1,0,0,0,0,1,0,0,0,1,0],
+[0,1,1,1,1,1,1,0,1,1,1,1,1,0],
+[0,1,0,0,0,0,1,0,0,0,0,0,1,0],
+[0,1,1,1,1,0,1,1,1,1,1,0,1,0],
+[0,0,0,0,1,0,0,0,0,0,1,0,1,0],
+[0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+]
+
+];
+
+let goal={x:12,y:11};
+
+function draw(){
+ctx.clearRect(0,0,350,350);
+
+let maze=levels[level];
+
+for(let y=0;y<maze.length;y++){
+for(let x=0;x<maze[y].length;x++){
+
+ctx.fillStyle = maze[y][x]===0 ? "#111" : "#e2e8f0";
+ctx.fillRect(x*tile,y*tile,tile,tile);
+}
+}
+
+/* goal */
+ctx.fillStyle="lime";
+ctx.fillRect(goal.x*tile,goal.y*tile,tile,tile);
+
+/* cat besar */
+const catSize = tile * 1.5; // 1.5x lebih besar dari tile
+ctx.drawImage(cat, player.x*tile - (catSize-tile)/2, player.y*tile - (catSize-tile)/2, catSize, catSize);
+}
+
+function move(dx,dy){
+let maze=levels[level];
+
+let nx=player.x+dx;
+let ny=player.y+dy;
+
+if(maze[ny][nx]===1){
+player.x=nx;
+player.y=ny;
+}
+
+if(player.x===goal.x && player.y===goal.y){
+level++;
+
+if(level>=levels.length){
+alert("🏆 LU MENANG SEMUA!");
+level=0;
+}
+
+player={x:1,y:1};
+document.getElementById("levelText").innerText="Level "+(level+1);
+}
+
+draw();
+}
+
+cat.onload=draw;
+</script>
+
+</body>
+</html>
