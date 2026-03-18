@@ -16,51 +16,59 @@ color:white;
 text-align:center;
 }
 
-/* overlay gelap */
-body::before{
-content:"";
+/* OVERLAY FULL FIX */
+.overlay{
 position:fixed;
+top:0;
+left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,0.6);
-backdrop-filter:blur(4px);
-z-index:-1;
+background:rgba(0,0,0,0.7);
+backdrop-filter:blur(5px);
+z-index:0;
 }
 
+/* CONTENT */
+.content{
+position:relative;
+z-index:1;
+}
+
+/* LOGO */
 .logo{
 display:flex;
 justify-content:center;
 gap:10px;
-margin-top:10px;
+margin-top:20px;
 }
-.logo img{ width:50px; }
+.logo img{ width:60px; }
 
 h2{
 font-family:Orbitron;
 color:#38bdf8;
 text-shadow:0 0 10px #38bdf8;
-margin:5px;
 }
 
-.input-box{
-margin-top:10px;
+/* START SCREEN */
+.start{
+margin-top:100px;
 }
 
 input{
-padding:8px;
-border-radius:8px;
+padding:10px;
+border-radius:10px;
 border:none;
 }
 
 button{
-padding:8px 12px;
-border-radius:8px;
+padding:10px 15px;
+border-radius:10px;
 border:none;
 background:#38bdf8;
-color:black;
 cursor:pointer;
 }
 
+/* GAME UI */
 .info{
 margin:10px auto;
 padding:10px 20px;
@@ -84,20 +92,18 @@ background:#1e293b;
 border-radius:10px;
 }
 
-.controls{
-margin-top:15px;
-}
+.controls{ margin-top:15px; }
 
 .btn{
 padding:15px;
 margin:5px;
-font-size:18px;
 border-radius:15px;
 border:2px solid #38bdf8;
 background:transparent;
 color:#38bdf8;
 }
 
+/* LEADERBOARD */
 .leaderboard{
 background:#1e293b;
 margin:15px auto;
@@ -111,23 +117,40 @@ display:none;
 
 <body>
 
-<!-- LOGO -->
+<div class="overlay"></div>
+
+<div class="content">
+
+<!-- START SCREEN -->
+<div id="startScreen" class="start">
 <div class="logo">
 <img src="logo-sekolah.png">
 <img src="logo-mpk.png">
 <img src="logo-osis.png">
 </div>
 
-<!-- TITLE -->
 <h2>CAT MAZE SCHOOL</h2>
 
-<!-- NAMA + LEADERBOARD -->
-<div class="input-box">
 <input id="playerName" placeholder="Masukkan Nama">
+<br><br>
+<button onclick="startGame()">START GAME</button>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen" style="display:none;">
+
+<div class="logo">
+<img src="logo-sekolah.png">
+<img src="logo-mpk.png">
+<img src="logo-osis.png">
+</div>
+
+<h2>CAT MAZE SCHOOL</h2>
+
+<div>
 <button onclick="toggleLeaderboard()">🏆 Leaderboard</button>
 </div>
 
-<!-- LEVEL + WAKTU -->
 <div class="info">
 LEVEL <span id="levelText">1</span> |
 ⏱ <span id="timerText">00:00</span>
@@ -135,7 +158,6 @@ LEVEL <span id="levelText">1</span> |
 
 <br>
 
-<!-- GAME -->
 <div class="canvas-box">
 <canvas id="maze" width="350" height="325"></canvas>
 </div>
@@ -147,19 +169,22 @@ LEVEL <span id="levelText">1</span> |
 <button class="btn" onclick="move(1,0)">▶</button>
 </div>
 
-<!-- LEADERBOARD -->
 <div class="leaderboard" id="leaderboardBox">
 <h3>Leaderboard</h3>
 <div id="leaderboardList"></div>
 </div>
 
-<script>
-const canvas = document.getElementById("maze");
-const ctx = canvas.getContext("2d");
-const tile = 25;
+</div>
 
-const cat = new Image();
-cat.src = "kucing.png";
+</div>
+
+<script>
+const canvas=document.getElementById("maze");
+const ctx=canvas.getContext("2d");
+const tile=25;
+
+const cat=new Image();
+cat.src="kucing.png";
 
 let player={x:1,y:1};
 let level=0;
@@ -180,6 +205,13 @@ const levels=[/* LEVEL 1-10 (Sesuai kode awal lu) */
 ];
 const goals=levels.map(l=>({x:l[0].length-2,y:l.length-2}));
 
+function startGame(){
+document.getElementById("startScreen").style.display="none";
+document.getElementById("gameScreen").style.display="block";
+startTimer();
+draw();
+}
+
 function formatTime(s){
 let m=Math.floor(s/60);
 let ss=s%60;
@@ -196,7 +228,6 @@ document.getElementById("timerText").innerText=formatTime(seconds);
 
 function draw(){
 ctx.clearRect(0,0,350,325);
-
 let maze=levels[level];
 
 for(let y=0;y<maze.length;y++){
@@ -233,15 +264,11 @@ clearInterval(timer);
 let name=document.getElementById("playerName").value||"Player";
 saveScore(name,seconds);
 
-alert("🎉 CONGRATULATIONS!\nTime: "+formatTime(seconds));
+alert("🎉 CONGRATS!\nTime: "+formatTime(seconds));
 
-level=0;
-seconds=0;
-player={x:1,y:1};
-startTimer();
+location.reload();
 }
 
-document.getElementById("levelText").innerText=level+1;
 draw();
 }
 
@@ -267,16 +294,6 @@ data.forEach((d,i)=>{
 list.innerHTML+=`<div>#${i+1} ${d.name} - ${formatTime(d.time)}</div>`;
 });
 }
-
-window.addEventListener("keydown",e=>{
-if(e.key=="ArrowUp")move(0,-1);
-if(e.key=="ArrowDown")move(0,1);
-if(e.key=="ArrowLeft")move(-1,0);
-if(e.key=="ArrowRight")move(1,0);
-});
-
-draw();
-startTimer();
 </script>
 
 </body>
