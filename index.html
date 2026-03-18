@@ -9,55 +9,42 @@
 body {
     margin:0;
     font-family:sans-serif;
-    background: url("bg-sekolah.jpg") no-repeat center center;
-    background-size: cover;
+    background:url("bg-sekolah.jpg") no-repeat center/cover;
     color:white;
     text-align:center;
 }
 
-/* overlay biar ga terlalu terang */
-body::before {
-    content:"";
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.4);
-    z-index:-1;
-}
-
 h2 {
     color:#38bdf8;
+    text-shadow:0 0 10px #38bdf8;
 }
 
-canvas {
-    background:white;
-    border:4px solid #38bdf8;
-    border-radius:12px;
+.topbar {
     margin-top:10px;
 }
 
-.controls { margin:10px; }
-.btn { padding:10px; margin:5px; font-size:18px; }
-
-.timer { margin:5px; }
-
-.leaderboard {
-    background:#1e293b;
-    margin:10px auto;
-    padding:10px;
-    border-radius:10px;
-    max-width:300px;
-    display:none;
+canvas {
+    background:rgba(255,255,255,0.95);
+    border:4px solid #38bdf8;
+    border-radius:15px;
+    margin-top:10px;
 }
 
-.record-item {
-    display:flex;
-    justify-content:space-between;
-    font-size:14px;
-    border-bottom:1px solid #334155;
-    padding:3px;
+.controls button {
+    padding:15px;
+    margin:5px;
+    font-size:18px;
+    border-radius:10px;
+    border:none;
+    background:#38bdf8;
+}
+
+#leaderboardBox {
+    display:none;
+    background:#0f172a;
+    padding:10px;
+    border-radius:10px;
+    margin:10px;
 }
 </style>
 </head>
@@ -66,21 +53,22 @@ canvas {
 
 <h2>🐱 CAT MAZE SCHOOL 🐱</h2>
 
-<input id="playerName" placeholder="Nama">
+<div class="topbar">
+<input id="playerName" placeholder="Nama" style="padding:8px;border-radius:10px;border:none;">
 <button onclick="toggleLeaderboard()">🏆</button>
-
-<div class="timer" id="timerText">⏱ 00:00</div>
+<div id="timerText">⏱ 00:00</div>
+</div>
 
 <canvas id="maze" width="350" height="325"></canvas>
 
 <div class="controls">
-<button class="btn" onclick="move(0,-1)">⬆</button><br>
-<button class="btn" onclick="move(-1,0)">⬅</button>
-<button class="btn" onclick="move(0,1)">⬇</button>
-<button class="btn" onclick="move(1,0)">➡</button>
+<button onclick="move(0,-1)">⬆</button><br>
+<button onclick="move(-1,0)">⬅</button>
+<button onclick="move(0,1)">⬇</button>
+<button onclick="move(1,0)">➡</button>
 </div>
 
-<div class="leaderboard" id="leaderboardBox">
+<div id="leaderboardBox">
 <h3>🏆 Leaderboard</h3>
 <div id="leaderboardList"></div>
 </div>
@@ -95,7 +83,7 @@ let level = 0;
 let seconds = 0;
 let timer;
 
-/* LEVEL (lu bisa tambah sendiri) */
+/* LEVEL */
 const levels = [
 /* LEVEL 1-10 (Sesuai kode awal lu) */
     [[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,1,1,1,1,1,0,1,1,0],[0,1,0,1,0,1,0,0,0,1,0,1,0,0],[0,1,0,1,1,1,0,1,0,1,1,1,0,0],[0,1,0,0,0,1,0,1,0,0,0,1,0,0],[0,1,1,1,0,1,1,1,1,1,0,1,1,0],[0,0,0,1,0,0,0,0,0,1,0,0,1,0],[0,1,1,1,1,1,1,1,0,1,1,1,1,0],[0,1,0,0,0,0,0,1,0,0,0,0,1,0],[0,1,1,1,1,1,0,1,1,1,1,1,1,0],[0,0,0,0,0,1,0,0,0,0,0,0,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
@@ -121,6 +109,7 @@ let ss=s%60;
 return (m<10?"0"+m:m)+":"+(ss<10?"0"+ss:ss);
 }
 
+/* TIMER */
 function startTimer(){
 clearInterval(timer);
 timer=setInterval(()=>{
@@ -129,6 +118,7 @@ document.getElementById("timerText").innerText="⏱ "+formatTime(seconds);
 },1000);
 }
 
+/* DRAW */
 function draw(){
 ctx.clearRect(0,0,350,325);
 
@@ -151,6 +141,7 @@ ctx.font="20px Arial";
 ctx.fillText("🐱", player.x*tile+3, player.y*tile+20);
 }
 
+/* GERAK */
 function move(dx,dy){
 let maze = levels[level];
 let nx = player.x+dx;
@@ -168,20 +159,31 @@ if(player.x==g.x && player.y==g.y){
 if(level < levels.length-1){
 level++;
 player={x:1,y:1};
-alert("Level selesai!");
+alert("Level Selesai!");
 }else{
+
 clearInterval(timer);
 
-let name=document.getElementById("playerName").value || "Player";
+let name = document.getElementById("playerName").value || "Player";
+
+/* SAVE SCORE */
 saveScore(name,seconds);
 
-alert("🎉 Tamat!\nWaktu: "+formatTime(seconds));
+alert(
+"🎉 CONGRATULATIONS 🎉\n\n"+
+"Nama: "+name+"\n"+
+"Waktu: "+formatTime(seconds)+"\n\n"+
+"Terima kasih sudah bermain!\n"+
+"See you next update 🚀"
+);
 
+/* RESET */
 level=0;
 seconds=0;
 player={x:1,y:1};
 startTimer();
 }
+
 }
 
 draw();
@@ -209,8 +211,7 @@ list.innerHTML="";
 
 data.forEach((d,i)=>{
 let div=document.createElement("div");
-div.className="record-item";
-div.innerHTML=`<span>#${i+1} ${d.name}</span><span>${formatTime(d.time)}</span>`;
+div.innerHTML = `#${i+1} ${d.name} - ${formatTime(d.time)}`;
 list.appendChild(div);
 });
 }
