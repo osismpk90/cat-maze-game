@@ -5,72 +5,124 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cat Maze School</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
-body {
-    margin:0;
-    font-family:sans-serif;
-    background:url("bg-sekolah.jpg") no-repeat center/cover;
-    color:white;
-    text-align:center;
+body{
+margin:0;
+font-family:'Poppins';
+text-align:center;
+color:white;
+background:url("bg-sekolah.jpg") no-repeat center center/cover;
 }
 
-h2 {
-    color:#38bdf8;
-    text-shadow:0 0 10px #38bdf8;
+.overlay{
+background:rgba(15,23,42,0.8);
+min-height:100vh;
+padding-bottom:30px;
 }
 
-.topbar {
-    margin-top:10px;
+h2{
+font-family:'Orbitron';
+color:#38bdf8;
 }
 
-canvas {
-    background:rgba(255,255,255,0.95);
-    border:4px solid #38bdf8;
-    border-radius:15px;
-    margin-top:10px;
+.logo{
+display:flex;
+justify-content:center;
+gap:10px;
+padding-top:10px;
 }
 
-.controls button {
-    padding:15px;
-    margin:5px;
-    font-size:18px;
-    border-radius:10px;
-    border:none;
-    background:#38bdf8;
+.logo img{
+width:50px;
 }
 
-#leaderboardBox {
-    display:none;
-    background:#0f172a;
-    padding:10px;
-    border-radius:10px;
-    margin:10px;
+.info{
+margin:10px auto;
+background:#0f172a;
+display:inline-block;
+padding:10px 20px;
+border-radius:20px;
+border:2px solid #38bdf8;
+font-family:'Orbitron';
+}
+
+canvas{
+background:#0f172a;
+border:4px solid #38bdf8;
+border-radius:15px;
+margin-top:10px;
+}
+
+.controls{
+margin-top:15px;
+}
+
+.btn{
+padding:15px;
+margin:5px;
+font-size:18px;
+border-radius:15px;
+border:2px solid #38bdf8;
+background:transparent;
+color:#38bdf8;
+}
+
+.leaderboard{
+background:#1e293b;
+margin:15px auto;
+padding:10px;
+border-radius:10px;
+max-width:300px;
+display:none;
+}
+
+.record-item{
+display:flex;
+justify-content:space-between;
+border-bottom:1px solid #334155;
+padding:3px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🐱 CAT MAZE SCHOOL 🐱</h2>
+<div class="overlay">
 
-<div class="topbar">
-<input id="playerName" placeholder="Nama" style="padding:8px;border-radius:10px;border:none;">
-<button onclick="toggleLeaderboard()">🏆</button>
-<div id="timerText">⏱ 00:00</div>
+<div class="logo">
+<img src="logo-sekolah.png">
+<img src="logo-mpk.png">
+<img src="logo-osis.png">
 </div>
+
+<h2>CAT MAZE SCHOOL</h2>
+
+<input id="playerName" placeholder="Nama">
+<button onclick="toggleLeaderboard()">🏆</button>
+
+<div class="info">
+LEVEL <span id="levelText">1</span> |
+<span id="timerText">00:00</span>
+</div>
+
+<br>
 
 <canvas id="maze" width="350" height="325"></canvas>
 
 <div class="controls">
-<button onclick="move(0,-1)">⬆</button><br>
-<button onclick="move(-1,0)">⬅</button>
-<button onclick="move(0,1)">⬇</button>
-<button onclick="move(1,0)">➡</button>
+<button class="btn" onclick="move(0,-1)">▲</button><br>
+<button class="btn" onclick="move(-1,0)">◀</button>
+<button class="btn" onclick="move(0,1)">▼</button>
+<button class="btn" onclick="move(1,0)">▶</button>
 </div>
 
-<div id="leaderboardBox">
-<h3>🏆 Leaderboard</h3>
+<div class="leaderboard" id="leaderboardBox">
+<h3>Leaderboard</h3>
 <div id="leaderboardList"></div>
+</div>
+
 </div>
 
 <script>
@@ -78,12 +130,14 @@ const canvas = document.getElementById("maze");
 const ctx = canvas.getContext("2d");
 const tile = 25;
 
+const cat = new Image();
+cat.src = "kucing.png";
+
 let player = {x:1,y:1};
 let level = 0;
 let seconds = 0;
 let timer;
 
-/* LEVEL */
 const levels = [
 /* LEVEL 1-10 (Sesuai kode awal lu) */
     [[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,1,1,1,1,1,0,1,1,0],[0,1,0,1,0,1,0,0,0,1,0,1,0,0],[0,1,0,1,1,1,0,1,0,1,1,1,0,0],[0,1,0,0,0,1,0,1,0,0,0,1,0,0],[0,1,1,1,0,1,1,1,1,1,0,1,1,0],[0,0,0,1,0,0,0,0,0,1,0,0,1,0],[0,1,1,1,1,1,1,1,0,1,1,1,1,0],[0,1,0,0,0,0,0,1,0,0,0,0,1,0],[0,1,1,1,1,1,0,1,1,1,1,1,1,0],[0,0,0,0,0,1,0,0,0,0,0,0,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
@@ -99,8 +153,8 @@ const levels = [
 ];
 
 const goals = levels.map(lvl => ({
-    x: lvl[0].length - 2,
-    y: lvl.length - 2
+x: lvl[0].length-2,
+y: lvl.length-2
 }));
 
 function formatTime(s){
@@ -109,16 +163,14 @@ let ss=s%60;
 return (m<10?"0"+m:m)+":"+(ss<10?"0"+ss:ss);
 }
 
-/* TIMER */
 function startTimer(){
 clearInterval(timer);
 timer=setInterval(()=>{
 seconds++;
-document.getElementById("timerText").innerText="⏱ "+formatTime(seconds);
+document.getElementById("timerText").innerText=formatTime(seconds);
 },1000);
 }
 
-/* DRAW */
 function draw(){
 ctx.clearRect(0,0,350,325);
 
@@ -126,22 +178,28 @@ let maze = levels[level];
 
 for(let y=0;y<maze.length;y++){
 for(let x=0;x<maze[y].length;x++){
-ctx.fillStyle = maze[y][x]==0 ? "#1e293b" : "#fff";
+
+if(maze[y][x]==0){
+ctx.fillStyle="#020617";
+}else{
+ctx.fillStyle="#e5e7eb";
+}
+
 ctx.fillRect(x*tile,y*tile,tile,tile);
 }
 }
 
-/* GOAL */
 let g = goals[level];
-ctx.fillStyle="lime";
+ctx.fillStyle="green";
 ctx.fillRect(g.x*tile,g.y*tile,tile,tile);
 
-/* KUCING */
-ctx.font="20px Arial";
-ctx.fillText("🐱", player.x*tile+3, player.y*tile+20);
+if(cat.complete){
+let size = tile*1.5;
+let offset = (size - tile)/2;
+ctx.drawImage(cat, player.x*tile-offset, player.y*tile-offset, size, size);
+}
 }
 
-/* GERAK */
 function move(dx,dy){
 let maze = levels[level];
 let nx = player.x+dx;
@@ -165,19 +223,10 @@ alert("Level Selesai!");
 clearInterval(timer);
 
 let name = document.getElementById("playerName").value || "Player";
-
-/* SAVE SCORE */
 saveScore(name,seconds);
 
-alert(
-"🎉 CONGRATULATIONS 🎉\n\n"+
-"Nama: "+name+"\n"+
-"Waktu: "+formatTime(seconds)+"\n\n"+
-"Terima kasih sudah bermain!\n"+
-"See you next update 🚀"
-);
+alert("🎉 CONGRATULATIONS 🎉\nWaktu: "+formatTime(seconds)+"\nTerima kasih sudah bermain!");
 
-/* RESET */
 level=0;
 seconds=0;
 player={x:1,y:1};
@@ -186,10 +235,10 @@ startTimer();
 
 }
 
+document.getElementById("levelText").innerText=level+1;
 draw();
 }
 
-/* LEADERBOARD */
 function toggleLeaderboard(){
 let box=document.getElementById("leaderboardBox");
 box.style.display = box.style.display=="none"?"block":"none";
@@ -206,12 +255,13 @@ localStorage.setItem("mazeScore",JSON.stringify(data));
 
 function renderLeaderboard(){
 let data = JSON.parse(localStorage.getItem("mazeScore")) || [];
-let list=document.getElementById("leaderboardList");
+let list = document.getElementById("leaderboardList");
 list.innerHTML="";
 
 data.forEach((d,i)=>{
 let div=document.createElement("div");
-div.innerHTML = `#${i+1} ${d.name} - ${formatTime(d.time)}`;
+div.className="record-item";
+div.innerHTML=`<span>#${i+1} ${d.name}</span><span>${formatTime(d.time)}</span>`;
 list.appendChild(div);
 });
 }
